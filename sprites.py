@@ -24,11 +24,13 @@ class Platformsheet:
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, game):
+        self.__layer__ = PLAYER_LAYER
         self.groups = game.sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.walking = False
         self.isjumping = False
+        self.falling = False
         self.current_frame = 0 # current frame
         self.last_update = 0
         self.loadCharacters()
@@ -60,28 +62,39 @@ class Player(pygame.sprite.Sprite):
         for frame in self.walking_r:
             frame.set_colorkey(BLACK)
             self.walking_l.append(pygame.transform.flip(frame, True, False))
-            
-            
-        self.jumping = [
+
+
+        self.flying = [
             self.game.spritesheet.get_image(890, 51, 38, 50),
             self.game.spritesheet.get_image(849, 877, 38, 43),
             self.game.spritesheet.get_image(849, 429, 40, 39)
         ]
 
-
+    
     def jump(self):
         # jump only when standing on a platform
         self.rect.x += 1
         hits = pygame.sprite.pygame.sprite.spritecollide(self, self.game.platforms, False)
         self.rect.x -= 1
 
-        if hits and not self.jumping:
+        if hits and not self.isjumping:
             self.game.jumpSound.play()
-            self.jumping = True
+            self.isjumping = True
             self.velocity.y = PLAYER_STRENGTH
 
+            now = pygame.time.get_ticks()
+
+            if now - self.last_update > 350:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.flying)
+                bottom = self.rect.bottom
+                self.image = self.flying[self.current_frame]
+                self.image.set_colorkey(BLACK)
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+
     def jumpCut(self):
-        if self.jumping:
+        if self.isjumping:
             if self.velocity.y < -3:
                 self.velocity.y = -3
             
@@ -146,9 +159,12 @@ class Player(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
 
+        self.mask = pygame.mask.from_surface(self.image)
+
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
+        self.__layer__ = PLATFORM_LAYER
         self.groups = game.sprites, game.platforms
         pygame.sprite.Sprite.__init__(self, self.groups)
 
@@ -174,12 +190,18 @@ class Platform(pygame.sprite.Sprite):
 
 class Power(pygame.sprite.Sprite):
     def __init__(self, game, plat):
+        self.__layer__ = POWER_LAYER
         self.groups = game.sprites, game.powerups
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.plat = plat
-        self.type = choice(['boost'])
-        self.image = self.game.spritesheet.get_image(929, 317, 32, 30)
+        self.type = choice(['boost', 'life'])
+        
+        if(self.type == "boost"):
+            self.image = self.game.spritesheet.get_image(929, 317, 32, 30)
+        else:
+            self.image = self.game.spritesheet.get_image(928, 138, 34, 39)
+
         self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
@@ -190,3 +212,55 @@ class Power(pygame.sprite.Sprite):
         self.rect.bottom = self.plat.rect.top - 5
         if not self.game.platforms.has(self.plat):
             self.kill()
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, game):
+        self.__layer__ = ENEMY_LAYER
+        self.groups = game.sprites, game.enemies
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+
+        self.flying = self.game.spritesheet.get_image(455, 390, 64, 38)
+        self.flyingDown = self.game.spritesheet.get_image(455, 533, 64, 43)
+        
+        self.image = self.flying
+        self.rect = self.image.get_rect()
+        self.rect.centerx = choice([-100, WIDTH + 100])
+        self.vx = randrange(1, 5)
+
+        if(self.rect.centerx > WIDTH):
+            self.vx *= -1 
+
+        self.rect.y = randrange(HEIGHT / 2)
+        self.vy = 0
+
+        self.dc = 0.5
+        
+    
+    def update(self):
+        self.rect.x += self.vx
+        self.vy += self.dc
+
+        if(self.vy > 3 or self.vy < -3):
+            self.dc *= -1
+
+        center = self.rect.center 
+
+        if self.dc < 0:
+            self.image = self.flying
+        else:
+            self.image = self.flyingDown
+
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.center = center
+        self.rect.y += self.vy
+
+        if self.rect.left > WIDTH + 100 or self.rect.right < -100:
+            self.kill()
+
+        #   <SubTexture name="enemyFlying_1.png"	x="455"	y="390"	width="64"	height="38" frameX="-0" frameY="-0" frameWidth="64" frameHeight="38"/>
+        # 	<SubTexture name="enemyFlying_2.png"	x="455"	y="429"	width="64"	height="38" frameX="-0" frameY="-0" frameWidth="64" frameHeight="38"/>
+        # 	<SubTexture name="enemyFlying_3.png"	x="455"	y="533"	width="64"	height="43" frameX="-0" frameY="-0" frameWidth="64" frameHeight="43"/>
+        # 	<SubTexture name="enemyFlying_4.png"	x="584"	y="996"	width="60"	height="25" frameX="-0" frameY="-0" frameWidth="60" frameHeight="25"/>
