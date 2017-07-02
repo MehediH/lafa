@@ -13,8 +13,12 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (91, 255, 159)
-GREENALT = (175, 119, 221)
+GREENALT = (222, 64, 237)
 MAROON = (135, 35, 51)
+
+# Game props
+BOOST = 60
+POW_SPAWN_HZ = 10
 
 #platforms
 PLATFORM_LIST = [

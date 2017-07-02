@@ -26,6 +26,7 @@ class Pooprush:
 
         self.soundDir = path.join(self.dir, 'inc/sounds/')
         self.jumpSound = pygame.mixer.Sound(path.join(self.soundDir, 'jump.wav'))
+        self.boostSound = pygame.mixer.Sound(path.join(self.soundDir, 'pup.wav'))
 
     def renderSplash(self):
         pygame.mixer.music.load(path.join(self.soundDir, 'bg.ogg'))
@@ -101,6 +102,15 @@ class Pooprush:
         while len(self.platforms) < 6:
             width = random.randrange(50, 100)
             Platform(self, random.randrange(0, WIDTH - width), random.randrange(-75, -30))
+        
+        # power up detection
+        power_hits = pygame.sprite.spritecollide(self.player, self.powerups, True)
+
+        for power in power_hits:
+            if power.type == "boost":
+                self.boostSound.play()
+                self.player.velocity.y = -BOOST
+                self.player.jumping = False
 
         # game over
         if self.player.rect.bottom > HEIGHT:
@@ -144,7 +154,7 @@ class Pooprush:
         self.screen.fill(MAROON)
         self.renderText("GAME OVER", 50, WHITE, WIDTH / 2, HEIGHT / 4)
         self.renderText("Your score: " + str(self.score), 25, WHITE, WIDTH / 2, HEIGHT / 2)
-        self.renderText("Press any key to play to start again", 22, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
+        self.renderText("Press any key to start again", 22, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
         pygame.display.flip()
         pygame.mixer.music.load(path.join(self.soundDir, 'go.ogg'))
         pygame.mixer.music.play(loops =- 1)

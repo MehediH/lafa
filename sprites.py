@@ -1,6 +1,6 @@
 import pygame
 from defaults import *
-from random import choice
+from random import choice, randrange
 
 class Spritesheet:
     # load and parse assets from spritesheets
@@ -168,6 +168,9 @@ class Platform(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+        if randrange(100) < POW_SPAWN_HZ:
+            Power(self.game, self)
 
 class Power(pygame.sprite.Sprite):
     def __init__(self, game, plat):
