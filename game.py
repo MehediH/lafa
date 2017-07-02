@@ -26,6 +26,7 @@ class Lafa:
 
         self.user = ""
         self.pw = ""
+        self.pwalt = ""
         self.dp = ""
         self.userSet = False
         self.pwSet = False
@@ -272,16 +273,20 @@ class Lafa:
 
                         if(self.userSet):
                             self.pw = self.pw[:-1]
+                            self.pwalt = self.pwalt[:-1]
                             self.screen.fill(GREENALT, (0, HEIGHT * 3 / 4 - 20, WIDTH, 20))
-                            self.renderText("Password: " + str(self.pw), 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 20)
+                            self.renderText("Password: " + str(self.pwalt), 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 20)
 
                     elif event.key == pygame.K_RETURN:
                         self.userSet = True
-                        self.renderText("Password: " + str(self.pw), 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 20)
+                        self.screen.fill(GREENALT, (0, HEIGHT * 3 / 4 - 20, WIDTH, 20))
+                        self.renderText("Password: " + str(self.pwalt), 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 20)
 
-                        if self.pwSet:
+                        if len(self.pw) > 6 and self.pwSet:
                             waiting = False
                             self.saveUser()
+                        else:
+                            self.killSound.play()
 
                     if(chr(event.key) in allowed):
                         if(not self.userSet):
@@ -296,8 +301,9 @@ class Lafa:
                         if(self.userSet):
                             if len(self.pw) < 15:
                                 self.pw += chr(event.key)
+                                self.pwalt += "•"
                                 self.screen.fill(GREENALT, (0, HEIGHT * 3 / 4 - 20, WIDTH, 20))
-                                self.renderText("Password: " + str(self.pw), 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 20)
+                                self.renderText("Password: " + str(self.pwalt), 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 20)
                                 self.pwSet = True
                             else:
                                 self.pwSet = True
