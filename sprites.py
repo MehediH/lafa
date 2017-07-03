@@ -23,7 +23,7 @@ class Platformsheet:
         return image
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, game, avi):
         self.__layer__ = PLAYER_LAYER
         self.groups = game.sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -33,7 +33,8 @@ class Player(pygame.sprite.Sprite):
         self.falling = False
         self.current_frame = 0 # current frame
         self.last_update = 0
-        self.loadCharacters()
+        self.avi = avi
+        self.loadCharacters(self.avi)
         self.image = self.standing[0]
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
@@ -42,20 +43,79 @@ class Player(pygame.sprite.Sprite):
         self.velocity = pygame.math.Vector2(0, 0)
         self.accleration = pygame.math.Vector2(0, 0)
 
-    def loadCharacters(self):
-        self.standing = [
-            self.game.spritesheet.get_image(890, 0, 38, 50),
-            self.game.spritesheet.get_image(890, 51, 38, 50)
-        ]
+    def loadCharacters(self, avi):
+        
+        if(avi == "green"):
+            self.standing = [
+                self.game.spritesheet.get_image(890, 0, 38, 50),
+                self.game.spritesheet.get_image(890, 51, 38, 50)
+            ]
 
-        for frame in self.standing:
-            frame.set_colorkey(BLACK)
+            self.walking_r = [
+                self.game.spritesheet.get_image(890, 366, 38, 50),
+                self.game.spritesheet.get_image(889, 963, 38, 48),
+                self.game.spritesheet.get_image(889, 877, 38, 48)
+            ]
 
-        self.walking_r = [
-            self.game.spritesheet.get_image(890, 366, 38, 50),
-            self.game.spritesheet.get_image(889, 963, 38, 48),
-            self.game.spritesheet.get_image(889, 877, 38, 48)
-        ]
+            self.flying = [
+                self.game.spritesheet.get_image(890, 51, 38, 50),
+                self.game.spritesheet.get_image(849, 877, 38, 43),
+                self.game.spritesheet.get_image(849, 429, 40, 39)
+            ]
+
+        if(avi == "red"):
+            self.standing = [
+                self.game.spritesheet.get_image(850, 518, 39, 48),
+                self.game.spritesheet.get_image(850, 469, 39, 48)
+            ]
+
+            self.walking_r = [
+                self.game.spritesheet.get_image(850, 47, 39, 48),
+                self.game.spritesheet.get_image(849, 96, 39, 45),
+                self.game.spritesheet.get_image(710, 384, 49, 45)
+            ]
+
+            self.flying = [
+                self.game.spritesheet.get_image(850, 469, 39, 48),
+                self.game.spritesheet.get_image(850, 0, 39, 46),
+                self.game.spritesheet.get_image(650, 685, 56, 38)
+            ]
+
+        if(avi == "blue"):
+            self.standing = [
+                self.game.spritesheet.get_image(762, 203, 45, 54),
+                self.game.spritesheet.get_image(760, 435, 45, 54)
+            ]
+
+            self.walking_r = [
+                self.game.spritesheet.get_image(759, 812, 45, 54),
+                self.game.spritesheet.get_image(760, 380, 45, 54),
+                self.game.spritesheet.get_image(759, 503, 45, 52)
+            ]
+
+            self.flying = [
+                self.game.spritesheet.get_image(760, 435, 45, 54),
+                self.game.spritesheet.get_image(759, 556, 45, 50),
+                self.game.spritesheet.get_image(758, 771, 45, 40)
+            ]
+
+        if(avi == "grey"):
+            self.standing = [
+                self.game.spritesheet.get_image(890, 799, 36, 45),
+                self.game.spritesheet.get_image(927, 578, 36, 45)
+            ]
+
+            self.walking_r = [
+                self.game.spritesheet.get_image(927, 791, 36, 45),
+                self.game.spritesheet.get_image(890, 417, 37, 43),
+                self.game.spritesheet.get_image(890, 494, 37, 42)
+            ]
+
+            self.flying = [
+                self.game.spritesheet.get_image(927, 578, 36, 45),
+                self.game.spritesheet.get_image(890, 537, 37, 40),
+                self.game.spritesheet.get_image(764, 55, 44, 36)
+            ]
 
         self.walking_l = []
 
@@ -64,11 +124,8 @@ class Player(pygame.sprite.Sprite):
             self.walking_l.append(pygame.transform.flip(frame, True, False))
 
 
-        self.flying = [
-            self.game.spritesheet.get_image(890, 51, 38, 50),
-            self.game.spritesheet.get_image(849, 877, 38, 43),
-            self.game.spritesheet.get_image(849, 429, 40, 39)
-        ]
+        for frame in self.standing:
+            frame.set_colorkey(BLACK)
 
     
     def jump(self):

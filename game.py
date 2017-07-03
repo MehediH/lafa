@@ -4,12 +4,6 @@ from defaults import * # bring in the default params
 from sprites import * # bring in the sprites
 from os import path
 
-class CustomException(ValueError): # raised if data conversion fails
-    def __init__(self, message):
-        self.message = message
-        print("There was a problem converting data")
-
-
 # main lafa class
 class Lafa:
     def __init__(self):
@@ -28,6 +22,7 @@ class Lafa:
         self.pw = ""
         self.pwalt = ""
         self.dp = ""
+        self.avi = "green"
         self.userSet = False
         self.pwSet = False
 
@@ -92,12 +87,13 @@ class Lafa:
     # run a new game
     def newGame(self):
         self.score = 0
+        self.highScore = 0
         self.deaths = 10
         self.sprites = pygame.sprite.LayeredUpdates()
         self.platforms = pygame.sprite.Group()
         self.powerups = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
-        self.player = Player(self)
+        self.player = Player(self, self.avi)
         self.enemyTimer = 0
         self.userExists = False
 
@@ -214,14 +210,11 @@ class Lafa:
          
         self.screen.fill(MAROON)
 
-        try:
-            if(self.user["score"] < self.score):
-                self.user["score"] = self.score
-                self.renderText("NEW HIGH SCORE, BABY!", 50, WHITE, WIDTH / 2, HEIGHT / 3)
-        except:
-            self.user["score"] = self.score
-
-        self.db.child("users/" + self.dp).update(self.user, self.user['idToken'])
+        if(self.highScore < self.score):
+            self.highScore = self.score
+            self.renderText("NEW HIGH SCORE, BABY!", 50, WHITE, WIDTH / 2, HEIGHT / 3)
+            self.user["score"] = self.highScore
+            self.db.child("users/" + self.dp).update(self.user, self.user['idToken'])
 
         self.renderText("GAME OVER", 50, WHITE, WIDTH / 2, HEIGHT / 4)
         self.renderText("Your score: " + str(self.score), 25, WHITE, WIDTH / 2, HEIGHT / 2)
@@ -282,7 +275,7 @@ class Lafa:
                         self.screen.fill(GREENALT, (0, HEIGHT * 3 / 4 - 20, WIDTH, 20))
                         self.renderText("Password: " + str(self.pwalt), 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 20)
 
-                        if len(self.pw) > 6 and self.pwSet:
+                        if len(self.pw) > 5 and self.pwSet:
                             waiting = False
                             self.saveUser()
                         else:
@@ -330,19 +323,52 @@ class Lafa:
                 self.renderText("Something went wrong, please try again", 25, WHITE, WIDTH / 2, HEIGHT * 3 / 4 - 50)
 
         self.dp = email.replace("@outlook.com", "")
-       
-        self.user.update({"displayName": self.dp})
+        
+        self.user["displayName"] = self.dp
+        
+        self.avi = self.db.child("users/" + self.dp + "/avatar").get(self.user['idToken']).val()
+        self.user["avatar"] = self.avi
+
+        if(self.avi == None):
+            self.avi = random.choice(["blue", "green", "red", "grey"])
+        
+        self.user["avatar"] = self.avi
+
+        self.highScore = self.db.child("users/" + self.dp + "/score").get(self.user['idToken']).val()
+
+        if self.highScore == None:
+            self.highScore = 0
+        
+        self.user["score"] = self.highScore
 
         self.db.child("users/" + self.dp).update(self.user, self.user['idToken'])
 
     def showLeaderboard(self):
         users = self.db.child("users").get(self.user['idToken']).val()
+        
         leaderboard = {}
+
 
         for i in users:
             user = users[i]
 
-            leaderboard[user["displayName"]] = user["score"]
+            score = 0
+            name = ""
+            avi = ""
+
+            for item, val in user.items():
+                if(item == "score"):
+                    score = val
+                
+                if(item == "displayName"):
+                    name = val
+
+                if(item == "avatar"):
+                    avi = val
+            
+            data = [score, name, avi]
+
+            leaderboard[user["displayName"]] = data
 
         leaderboard = sorted(leaderboard.items(), key=lambda x: x[1], reverse=True)
 
@@ -359,12 +385,32 @@ class Lafa:
 
             x = 0
             y = 10
-            for i in leaderboard:
-                self.renderText(str(leaderboard[x][1]) + " by " + leaderboard[x][0], 25, WHITE, WIDTH / 2, 120 + y) 
-                y += 20
+            for i in leaderboard:     
+                if(x < 10):
+                    avi = leaderboard[x][1][2]
+                    if(avi == "green"):
+                        imagep = self.spritesheet.get_image(890, 0, 38, 50)
+                    elif(avi == "red"):
+                        imagep =self.spritesheet.get_image(850, 518, 39, 48)
+                    elif(avi == "blue"):
+                        imagep = self.spritesheet.get_image(762, 203, 45, 54)
+                    elif(avi == "grey"):
+                        imagep = self.spritesheet.get_image(890, 799, 36, 45)
+                    else:
+                        imagep = self.spritesheet.get_image(890, 0, 38, 50)
+
+                    imagep.set_colorkey(BLACK)
+                    imagep = pygame.transform.scale(imagep, (20, 25))
+
+                    self.screen.blit(imagep, (WIDTH / 2 - 120, 120 + y))
+
+                    self.renderText(str(leaderboard[x][1][0]) + " by " + leaderboard[x][1][1], 25, WHITE, WIDTH / 2, 120 + y) 
+
+                y += 40
                 x += 1
 
             pygame.display.flip()
+            re = False
         
 # kick start the game
 lafa = Lafa()
